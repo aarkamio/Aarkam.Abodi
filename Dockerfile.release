@@ -1,0 +1,56 @@
+# =========================================================================
+# Aarkam Abodi Sovereign Storage & Diagnostics Node Daemon (v1.0.2)
+# Production Container Image (Option A: Release Artifact Distribution)
+# =========================================================================
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble AS runtime
+
+LABEL org.opencontainers.image.title="Aarkam Abodi Sovereign Storage Node Daemon" \
+      org.opencontainers.image.description="Hardware diagnostics, Kdouja direct block I/O, and zero-loss telemetry daemon" \
+      org.opencontainers.image.version="1.0.2" \
+      org.opencontainers.image.vendor="Aarkam.IO" \
+      org.opencontainers.image.licenses="Proprietary"
+
+# Install hardware inspection, disk SMART diagnostics, and networking utilities
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    smartmontools \
+    nvme-cli \
+    util-linux \
+    pciutils \
+    dmidecode \
+    lm-sensors \
+    iproute2 \
+    ethtool \
+    libsqlite3-0 \
+    ca-certificates \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /var/lib/aarkam/security \
+                /var/lib/aarkam/outbox \
+                /var/lib/aarkam/storage \
+                /var/log/aarkam/abodi \
+                /app/logs \
+    && chmod 0700 /var/lib/aarkam/security
+
+WORKDIR /app
+
+# Copy verified self-contained release payload
+COPY dist/linux/ /app/
+
+# Ensure executable permissions on native binary and installer
+RUN chmod +x /app/Abodi /app/install-abodi.sh
+
+# Expose standard Abodi gRPC and REST service ports:
+# 57775: gRPC mTLS (Kdouja PageStore Data Plane)
+# 7775:  gRPC Cleartext (Local Host Data Plane)
+# 57776: HTTPS REST mTLS (Control & Telemetry Plane)
+# 7776:  HTTP REST Cleartext (Local Host Diagnostics & Health Probe)
+EXPOSE 7776 57776 7775 57775
+
+# Persistent state volumes
+VOLUME ["/var/lib/aarkam/security", "/var/lib/aarkam/outbox", "/var/lib/aarkam/storage", "/var/log/aarkam/abodi"]
+
+# Health check against local liveness endpoint
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://127.0.0.1:7776/api/v1/health/ping || exit 1
+
+ENTRYPOINT ["/app/Abodi"]

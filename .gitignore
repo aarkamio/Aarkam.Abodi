@@ -1,0 +1,37 @@
+# Release binary archives (hosted on GitHub Releases, never tracked in Git tree)
+*.zip
+*.tar.gz
+*.tgz
+*.7z
+**/*.zip
+**/*.tar.gz
+**/*.tgz
+**/*.7z
+
+# Unpacked release working directories (only markdown docs, scripts, and checksums are tracked)
+**/win/
+**/linux/
+**/win-x64/
+**/linux-x64/
+
+# Whitelist markdown documentation, scripts, and checksums in release directories
+!**/*.md
+!**/SHA256SUMS.txt
+!**/checksums.sha256
+!**/LICENSE
+!**/install-abodi.sh
+!**/install-abodi.ps1
+
+# IDE / Build Artifacts
+.vs/
+.idea/
+bin/
+obj/
+*.user
+*.suo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+dist/

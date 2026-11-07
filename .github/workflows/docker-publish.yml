@@ -1,0 +1,206 @@
+name: Publish Abodi Docker Image
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Image Version Tag (e.g. 1.0.2)'
+        required: true
+        default: '1.0.2'
+      release_tag:
+        description: 'GitHub Release Tag to fetch binary from (e.g. abodi-v1.0.2 or v1.0.2)'
+        required: false
+        default: 'abodi-v1.0.2'
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-push:
+    name: Build & Push Abodi Docker Image
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name != 'release' ||
+      startsWith(github.event.release.tag_name, 'abodi') ||
+      startsWith(github.event.release.tag_name, 'v')
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Resolve Version and Tag
+        id: meta
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            RAW_TAG="${{ github.event.release.tag_name }}"
+          else
+            RAW_TAG="${{ github.event.inputs.release_tag }}"
+            if [ -z "$RAW_TAG" ]; then
+              RAW_TAG="abodi-v${{ github.event.inputs.version }}"
+            fi
+          fi
+          
+          # Clean version: strip "abodi-v", "abodi-", "v-", "v"
+          CLEAN_VER="${RAW_TAG#abodi-v}"
+          CLEAN_VER="${CLEAN_VER#abodi-}"
+          CLEAN_VER="${CLEAN_VER#v-}"
+          CLEAN_VER="${CLEAN_VER#v}"
+          CLEAN_VER="${CLEAN_VER#-}"
+          if [ -z "${CLEAN_VER}" ]; then
+            CLEAN_VER="${{ github.event.inputs.version || '1.0.2' }}"
+          fi
+          
+          echo "version=${CLEAN_VER}" >> $GITHUB_OUTPUT
+          echo "release_tag=${RAW_TAG}" >> $GITHUB_OUTPUT
+          echo "Resolved Version: ${CLEAN_VER}, Release Tag: ${RAW_TAG}"
+
+      - name: Stage Release Payload
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RAW_TAG: ${{ steps.meta.outputs.release_tag }}
+          CLEAN_VER: ${{ steps.meta.outputs.version }}
+        run: |
+          mkdir -p dist/linux /tmp/release-asset
+          echo "==> Staging Abodi release payload for Tag: ${RAW_TAG}, Clean Version: ${CLEAN_VER}"
+
+          FOUND=false
+          CANDIDATE_TAGS=(
+            "${RAW_TAG}"
+            "abodi-v${CLEAN_VER}"
+            "abodi-${CLEAN_VER}"
+            "v${CLEAN_VER}"
+            "v-${CLEAN_VER}"
+            "${CLEAN_VER}"
+          )
+
+          # Strategy 1: gh release download
+          for t in "${CANDIDATE_TAGS[@]}"; do
+            echo "Attempting gh release download for tag: $t..."
+            if gh release download "$t" --repo "${{ github.repository }}" --pattern "*abodi*linux*.zip" --dir /tmp/release-asset; then
+              FOUND=true
+              echo "Downloaded via gh release from ${{ github.repository }} with tag $t"
+              break
+            elif gh release download "$t" --repo "aarkamio/Aarkam.Abodi" --pattern "*abodi*linux*.zip" --dir /tmp/release-asset; then
+              FOUND=true
+              echo "Downloaded via gh release from aarkamio/Aarkam.Abodi with tag $t"
+              break
+            elif gh release download "$t" --repo "aarkamio/Aarkam" --pattern "*abodi*linux*.zip" --dir /tmp/release-asset; then
+              FOUND=true
+              echo "Downloaded via gh release from aarkamio/Aarkam with tag $t"
+              break
+            elif gh release download "$t" --repo "${{ github.repository }}" --pattern "*linux*.zip" --dir /tmp/release-asset; then
+              FOUND=true
+              echo "Downloaded generic linux zip via gh release from ${{ github.repository }} with tag $t"
+              break
+            elif gh release download "$t" --repo "aarkamio/Aarkam.Abodi" --pattern "*linux*.zip" --dir /tmp/release-asset; then
+              FOUND=true
+              echo "Downloaded generic linux zip via gh release from aarkamio/Aarkam.Abodi with tag $t"
+              break
+            elif gh release download "$t" --repo "aarkamio/Aarkam" --pattern "*linux*.zip" --dir /tmp/release-asset; then
+              FOUND=true
+              echo "Downloaded generic linux zip via gh release from aarkamio/Aarkam with tag $t"
+              break
+            fi
+          done
+
+          # Strategy 2: Direct curl from GitHub Releases
+          if [ "$FOUND" = false ]; then
+            echo "gh release not matched; attempting direct curl download from GitHub Releases..."
+            CANDIDATE_URLS=(
+              "https://github.com/aarkamio/Aarkam.Abodi/releases/download/${RAW_TAG}/abodi-v${CLEAN_VER}-linux-x64.zip"
+              "https://github.com/aarkamio/Aarkam.Abodi/releases/download/abodi-v${CLEAN_VER}/abodi-v${CLEAN_VER}-linux-x64.zip"
+              "https://github.com/aarkamio/Aarkam.Abodi/releases/download/${RAW_TAG}/abodi-${RAW_TAG}-linux-x64.zip"
+              "https://github.com/aarkamio/Aarkam.Abodi/releases/download/abodi-v${CLEAN_VER}/abodi-linux-x64.zip"
+              "https://github.com/aarkamio/Aarkam.Abodi/releases/download/v${CLEAN_VER}/abodi-v${CLEAN_VER}-linux-x64.zip"
+              "https://github.com/aarkamio/Aarkam/releases/download/${RAW_TAG}/abodi-v${CLEAN_VER}-linux-x64.zip"
+              "https://github.com/aarkamio/Aarkam/releases/download/abodi-v${CLEAN_VER}/abodi-v${CLEAN_VER}-linux-x64.zip"
+              "https://github.com/aarkamio/Aarkam/releases/download/${RAW_TAG}/abodi-${RAW_TAG}-linux-x64.zip"
+              "https://github.com/aarkamio/Aarkam/releases/download/abodi-v${CLEAN_VER}/abodi-linux-x64.zip"
+              "https://github.com/aarkamio/Aarkam/releases/download/v${CLEAN_VER}/abodi-v${CLEAN_VER}-linux-x64.zip"
+            )
+            for url in "${CANDIDATE_URLS[@]}"; do
+              echo "Probing URL: $url"
+              if curl -sSL -f ${GH_TOKEN:+-H "Authorization: Bearer $GH_TOKEN"} -o /tmp/release-asset/abodi-linux-x64.zip "$url"; then
+                FOUND=true
+                echo "Successfully downloaded via curl: $url"
+                break
+              fi
+            done
+          fi
+
+          # Strategy 3: Local workspace fallback (from release tree)
+          if [ "$FOUND" = false ]; then
+            if [ -f "V-${CLEAN_VER}/linux/Abodi" ]; then
+              echo "Using local pre-extracted binary: V-${CLEAN_VER}/linux/Abodi"
+              cp -r V-${CLEAN_VER}/linux/* dist/linux/
+              FOUND=true
+            elif [ -f "V-${CLEAN_VER}/abodi-v${CLEAN_VER}-linux-x64.zip" ]; then
+              echo "Using local release archive: V-${CLEAN_VER}/abodi-v${CLEAN_VER}-linux-x64.zip"
+              cp "V-${CLEAN_VER}/abodi-v${CLEAN_VER}-linux-x64.zip" /tmp/release-asset/
+              FOUND=true
+            elif [ -f "Releases/Abodi/V-${CLEAN_VER}/linux/Abodi" ]; then
+              echo "Using legacy path binary: Releases/Abodi/V-${CLEAN_VER}/linux/Abodi"
+              cp -r Releases/Abodi/V-${CLEAN_VER}/linux/* dist/linux/
+              FOUND=true
+            elif [ -f "dist/linux/Abodi" ]; then
+              echo "Using pre-existing dist/linux/Abodi"
+              FOUND=true
+            fi
+          fi
+
+          # Extract ALL downloaded zip archives into dist/linux/
+          echo "Extracting all staged zip archives from /tmp/release-asset/ into dist/linux/..."
+          for z in $(find /tmp/release-asset -name "*linux*.zip" 2>/dev/null); do
+            echo "--> Inflating $z into dist/linux/..."
+            unzip -o "$z" -d dist/linux/
+          done
+
+          # Stage installer script if available
+          if [ -f "V-${CLEAN_VER}/linux/install-abodi.sh" ] && [ ! -f "dist/linux/install-abodi.sh" ]; then
+            cp "V-${CLEAN_VER}/linux/install-abodi.sh" dist/linux/
+          elif [ -f "scripts/install-abodi.sh" ] && [ ! -f "dist/linux/install-abodi.sh" ]; then
+            cp scripts/install-abodi.sh dist/linux/
+          fi
+
+          # Validation of required binary
+          if [ ! -f "dist/linux/Abodi" ]; then
+            echo "FATAL: Required Abodi binary not found in dist/linux/!"
+            echo "Contents of dist/linux:"
+            ls -la dist/linux/ || true
+            exit 1
+          fi
+
+          chmod +x dist/linux/Abodi dist/linux/install-abodi.sh 2>/dev/null || true
+          echo "Payload staged successfully:"
+          ls -la dist/linux/
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.release
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/aarkam.abodi:v${{ steps.meta.outputs.version }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/aarkam.abodi:${{ steps.meta.outputs.version }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/aarkam.abodi:latest
+
+      - name: Update Docker Hub Description
+        uses: peter-evans/dockerhub-description@v4
+        continue-on-error: true
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: aarkam/aarkam.abodi
+          readme-filepath: DOCKER_README.md

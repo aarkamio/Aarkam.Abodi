@@ -1,0 +1,42 @@
+services:
+  abodi:
+    image: ${DOCKER_REGISTRY-}aarkam/aarkam.abodi:v1.0.2
+    build:
+      context: .
+      dockerfile: Dockerfile.release
+    container_name: abodi-node
+    restart: unless-stopped
+    cap_add:
+      - SYS_RAWIO
+      - SYS_ADMIN
+    devices:
+      - "/dev:/dev"
+    ports:
+      - "7776:7776"     # HTTP REST (Health & Local Diagnostics)
+      - "57776:57776"   # HTTPS REST (mTLS Control & Telemetry)
+      - "7775:7775"     # gRPC Cleartext (Local Data Plane)
+      - "57775:57775"   # gRPC mTLS (Kdouja PageStore Data Plane)
+    volumes:
+      - abodi_security:/var/lib/aarkam/security
+      - abodi_outbox:/var/lib/aarkam/outbox
+      - abodi_storage:/var/lib/aarkam/storage
+      - abodi_logs:/var/log/aarkam/aarkam.abodi
+      - /sys:/sys:ro
+      - /proc:/proc:ro
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - DOTNET_CLI_TELEMETRY_OPTOUT=1
+      - AgentConfiguration__NodeCode=NODE-CONTAINER-01
+      - ABODI_API_KEY=${ABODI_API_KEY:-AARKAM_NODE_PROD_SECRET_KEY_CHANGE_ME}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:7776/api/v1/health/ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  abodi_security:
+  abodi_outbox:
+  abodi_storage:
+  abodi_logs:
