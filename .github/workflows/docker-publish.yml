@@ -160,8 +160,6 @@ jobs:
           # Stage installer script if available
           if [ -f "V-${CLEAN_VER}/linux/install-abodi.sh" ] && [ ! -f "dist/linux/install-abodi.sh" ]; then
             cp "V-${CLEAN_VER}/linux/install-abodi.sh" dist/linux/
-          elif [ -f "scripts/install-abodi.sh" ] && [ ! -f "dist/linux/install-abodi.sh" ]; then
-            cp scripts/install-abodi.sh dist/linux/
           fi
 
           # Validation of required binary
