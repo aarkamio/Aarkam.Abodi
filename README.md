@@ -663,7 +663,7 @@ Aarkam is commercially distributed under the [Aarkam Commercial Enterprise Sover
 - **Official Operations & Customer Licensing Portal**: [https://aarkam.io/](https://aarkam.io/)
 - **Technical Documentation & Knowledge Base**: [https://aarkam.io/Docs](https://aarkam.io/Docs)
 - **Enterprise Support Portal**: [https://aarkam.io/Administration/TehcnicalSupport](https://aarkam.io/Administration/TehcnicalSupport)
-- **Enterprise Sales & Custom Sovereign Deployment**: [enterprise@aarkam.io](mailto:enterprise@aarkam.io)
+- **Enterprise Sales & Custom Sovereign Deployment**: [support@aarkam.io](mailto:support@aarkam.io)
 
 ---
 *© 2026 Aarkam Inc. All Rights Reserved. Sovereign Distributed Storage Infrastructure.*

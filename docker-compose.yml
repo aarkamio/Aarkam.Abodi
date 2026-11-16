@@ -1,6 +1,6 @@
 services:
   abodi:
-    image: ${DOCKER_REGISTRY-}aarkam/aarkam.abodi:v1.0.2
+    image: ${DOCKER_REGISTRY-}aarkam/aarkam.abodi:v1.0.3
     build:
       context: .
       dockerfile: Dockerfile.release
@@ -28,8 +28,28 @@ services:
       - DOTNET_CLI_TELEMETRY_OPTOUT=1
       - AgentConfiguration__NodeCode=NODE-CONTAINER-01
       - ABODI_API_KEY=${ABODI_API_KEY:-AARKAM_NODE_PROD_SECRET_KEY_CHANGE_ME}
+      - Kdouja__Mode=${KDOUJA_MODE:-Embedded}
+      - Kdouja__Embedded__BaseDirectory=/var/lib/aarkam/storage/kdouja
+      - Kdouja__Standalone__Endpoint=${KDOUJA_ENDPOINT:-http://kdoujad:57771}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:7776/api/v1/health/ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  kdoujad:
+    image: ${DOCKER_REGISTRY-}aarkam/aarkam.kdouja:v1.0.2
+    profiles: ["standalone"]
+    container_name: abodi-kdoujad
+    restart: unless-stopped
+    volumes:
+      - abodi_storage:/var/lib/kdouja
+    environment:
+      - KDOUJA_BASE_DIRECTORY=/var/lib/kdouja
+      - KDOUJA_ENABLE_DIRECT_IO=false
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:57771/healthz"]
       interval: 30s
       timeout: 5s
       retries: 3

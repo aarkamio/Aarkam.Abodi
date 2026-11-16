@@ -1,12 +1,12 @@
 # =========================================================================
-# Aarkam Abodi Sovereign Storage & Diagnostics Node Daemon (v1.0.2)
+# Aarkam Abodi Sovereign Storage & Diagnostics Node Daemon (v1.0.3)
 # Production Container Image (Option A: Release Artifact Distribution)
 # =========================================================================
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble AS runtime
 
 LABEL org.opencontainers.image.title="Aarkam Abodi Sovereign Storage Node Daemon" \
       org.opencontainers.image.description="Hardware diagnostics, Kdouja direct block I/O, and zero-loss telemetry daemon" \
-      org.opencontainers.image.version="1.0.2" \
+      org.opencontainers.image.version="1.0.3" \
       org.opencontainers.image.vendor="Aarkam.IO" \
       org.opencontainers.image.licenses="Proprietary"
 
