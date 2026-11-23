@@ -1,6 +1,6 @@
 services:
   abodi:
-    image: ${DOCKER_REGISTRY-}aarkam/aarkam.abodi:v1.0.3
+    image: ${DOCKER_REGISTRY-}aarkam/aarkam.abodi:v1.0.4
     build:
       context: .
       dockerfile: Dockerfile.release

@@ -2,11 +2,11 @@
 
 <img src="https://raw.githubusercontent.com/aarkamio/Aarkam/main/docs/images/aarkam-logo.png" alt="Aarkam Logo" width="180" />
 
-# Abodi Sovereign Storage & Diagnostics Node Daemon (`v1.0.3`)
+# Abodi Sovereign Storage & Diagnostics Node Daemon (`v1.0.4`)
 ### Rokka-Native Storage Node Gateway, Dual-Mode Kdouja SAT Substrate & Predictive Hardware Telemetry Engine
 
-[![Version](https://img.shields.io/badge/version-v1.0.3--GA-blue.svg?style=for-the-badge&logo=semver)](https://github.com/aarkamio/Aarkam)
-[![Docker Image](https://img.shields.io/badge/docker-aarkam%2Faarkam.abodi%3Av1.0.3-2496ED.svg?style=for-the-badge&logo=docker)](https://hub.docker.com/r/aarkam/aarkam.abodi)
+[![Version](https://img.shields.io/badge/version-v1.0.4--GA-blue.svg?style=for-the-badge&logo=semver)](https://github.com/aarkamio/Aarkam)
+[![Docker Image](https://img.shields.io/badge/docker-aarkam%2Faarkam.abodi%3Av1.0.4-2496ED.svg?style=for-the-badge&logo=docker)](https://hub.docker.com/r/aarkam/aarkam.abodi)
 [![Kdouja SAT](https://img.shields.io/badge/Kdouja%20SAT-v1.0.2%20%7C%20SDK%20v1.0.1-purple.svg?style=for-the-badge)](https://hub.docker.com/r/aarkam/aarkam.kdouja)
 [![Rokka Fabric](https://img.shields.io/badge/Rokka%20Coordinator-v1.0.2%2B%20(%3A57774)-008080.svg?style=for-the-badge)]()
 [![Target OS](https://img.shields.io/badge/platform-Linux%20x64%20%7C%20Windows%20x64-333333.svg?style=for-the-badge&logo=linux)](https://github.com/aarkamio/Aarkam)
@@ -18,7 +18,7 @@
 
 ## 1. Overview: Abodi, Rokka, and Kdouja SAT
 
-**Aarkam Abodi (`v1.0.3`)** is the containerized and bare-metal node agent deployed on every storage server within the **Rokka Distributed Storage Fabric**. Built on **.NET 10.0**, Abodi unifies three mission-critical responsibilities on each storage host:
+**Aarkam Abodi (`v1.0.4`)** is the containerized and bare-metal node agent deployed on every storage server within the **Rokka Distributed Storage Fabric**. Built on **.NET 10.0**, Abodi unifies three mission-critical responsibilities on each storage host:
 
 1. **Rokka Storage Node Gateway & Zero-Trust Boundary (`:57775` / `:57776`):** Enrolls with the **Rokka Coordinator (`:57774`)** using single-use tokens (`ET1.<hex>`) and ECDSA P-256 mutual TLS (`spiffe://aarkam.cluster/node/{NodeCode}`), enforces monotonic Raft topology epoch fencing (`PrepareEpoch` / `topology_epoch.state`), and performs local AES-256-GCM Data Encryption Key (DEK) envelope wrapping (`GenerateDataKey` / `DecryptDataKey`).
 2. **Dual-Mode Kdouja SAT Storage Integration (`Aarkam.Kdouja.SDK v1.0.1`):** Supports both **Embedded Mode** (in-process Kdouja Direct I/O `PageStore` inside the `abodi` container) and **Standalone Sidecar Mode** (connecting to an isolated **`kdoujad` (`aarkam/aarkam.kdouja:v1.0.2`)** container over `:57771`).
@@ -32,9 +32,9 @@ Ensure your container tags and NuGet dependencies match the validated **Aarkam V
 
 | Component | Valid Version / Tag | Container Image / NuGet Package | Port(s) | Role in Container Stack |
 | :--- | :---: | :--- | :---: | :--- |
-| **Aarkam Abodi** | **`v1.0.3`** (`latest`) | `aarkam/aarkam.abodi:v1.0.3` | `57775`, `57776`, `7775`, `7776` | Primary Node Daemon, Rokka mTLS Gateway & Hardware Telemetry Agent |
+| **Aarkam Abodi** | **`v1.0.4`** (`latest`) | `aarkam/aarkam.abodi:v1.0.4` | `57775`, `57776`, `7775`, `7776` | Primary Node Daemon, Rokka mTLS Gateway & Hardware Telemetry Agent |
 | **Aarkam Kdouja SAT** | **`v1.0.2`** (`latest`) | `aarkam/aarkam.kdouja:v1.0.2` | `57771` *(internal)* | Standalone LSM-Tree & Direct I/O Block Daemon (`kdoujad` sidecar) |
-| **`Aarkam.Kdouja.SDK`** | **`1.0.1`** | `Aarkam.Kdouja.SDK` (+ `.Embedded`, `.Remote`, `.AspNetCore`) | — | Unified .NET 10 SDK embedded in Abodi `v1.0.3` for Dual-Mode Kdouja |
+| **`Aarkam.Kdouja.SDK`** | **`1.0.1`** | `Aarkam.Kdouja.SDK` (+ `.Embedded`, `.Remote`, `.AspNetCore`) | — | Unified .NET 10 SDK embedded in Abodi `v1.0.4` for Dual-Mode Kdouja |
 | **`Aarkam.Kdouja.Primitives`** | **`1.0.6`** | `Aarkam.Kdouja.Primitives` | — | Zero-allocation Direct I/O buffers & CRC32 parity primitives |
 | **Aarkam Rokka Coordinator** | **`v1.0.2+`** (`v2.1`) | `Rokka.Coordinator` (`Rokka.Contracts 1.0.2`) | `57774` | Cluster Consensus Coordinator, Node CA, Erasure Coding & Placement |
 
@@ -42,7 +42,8 @@ Ensure your container tags and NuGet dependencies match the validated **Aarkam V
 
 | Tag | Architecture | Base Image | Pre-Installed Hardware Diagnostic Tools |
 | :--- | :---: | :--- | :--- |
-| **`v1.0.3`**, **`1.0.3`**, **`latest`** | `linux/amd64` (`x86_64`) | `mcr.microsoft.com/dotnet/aspnet:10.0-noble` (Ubuntu 24.04 LTS) | `smartmontools`, `nvme-cli`, `util-linux` (`lsblk`), `pciutils`, `dmidecode`, `lm-sensors`, `iproute2`, `ethtool`, `libsqlite3-0`, `curl` |
+| **`v1.0.4`**, **`1.0.4`**, **`latest`** | `linux/amd64` (`x86_64`) | `mcr.microsoft.com/dotnet/aspnet:10.0-noble` (Ubuntu 24.04 LTS) | `smartmontools`, `nvme-cli`, `util-linux` (`lsblk`), `pciutils`, `dmidecode`, `lm-sensors`, `iproute2`, `ethtool`, `libsqlite3-0`, `curl` |
+| `v1.0.3`, `1.0.3` | `linux/amd64` (`x86_64`) | `mcr.microsoft.com/dotnet/aspnet:10.0-noble` | Dual-mode Kdouja SAT SDK v1.0.1 integration release |
 | `v1.0.2`, `1.0.2` | `linux/amd64` (`x86_64`) | `mcr.microsoft.com/dotnet/aspnet:10.0-noble` | Legacy single-mode release (prior to `Aarkam.Kdouja.SDK v1.0.1` integration) |
 
 ---
@@ -62,7 +63,7 @@ Ensure your container tags and NuGet dependencies match the validated **Aarkam V
                 │ • TelemetryMetricsWorker (SQLite Outbox)    │ • Diagnostics REST API (HTTPS :57776)
                 ▼                                             ▼
 ┌────────────────────────────────────────────────────────────────────────────┐
-│             aarkam/aarkam.abodi:v1.0.3 Container (Abodi Daemon)            │
+│             aarkam/aarkam.abodi:v1.0.4 Container (Abodi Daemon)            │
 │  • Zero-Trust Auth (KdoujaGrpcAuthInterceptor + SPIFFE SAN Verification)   │
 │  • Split-Brain Epoch Fencing (PrepareEpoch -> topology_epoch.state)        │
 │  • Local AES-256-GCM Envelope KMS (GenerateDataKey / DecryptDataKey)       │
@@ -116,7 +117,7 @@ Ensure your container tags and NuGet dependencies match the validated **Aarkam V
 
 ### 4.2 Option A: Docker Compose — Embedded Kdouja Mode (Default)
 
-Uses the repository's [`docker-compose.yml`](docker-compose.yml) to run `aarkam/aarkam.abodi:v1.0.3` with in-process Kdouja storage:
+Uses the repository's [`docker-compose.yml`](docker-compose.yml) to run `aarkam/aarkam.abodi:v1.0.4` with in-process Kdouja storage:
 
 ```bash
 # Start Abodi in Embedded Kdouja mode (default)
@@ -130,7 +131,7 @@ docker logs -f abodi-node
 
 ### 4.3 Option B: Docker Compose — Standalone `kdoujad` Sidecar Mode
 
-Launches both **`aarkam/aarkam.abodi:v1.0.3`** (`abodi-node`) and **`aarkam/aarkam.kdouja:v1.0.2`** (`abodi-kdoujad`) using the `standalone` Compose profile:
+Launches both **`aarkam/aarkam.abodi:v1.0.4`** (`abodi-node`) and **`aarkam/aarkam.kdouja:v1.0.2`** (`abodi-kdoujad`) using the `standalone` Compose profile:
 
 ```bash
 # Start Abodi + standalone kdoujad sidecar
@@ -144,7 +145,7 @@ Reference `docker-compose.yml` structure (included in repository):
 ```yaml
 services:
   abodi:
-    image: ${DOCKER_REGISTRY-}aarkam/aarkam.abodi:v1.0.3
+    image: ${DOCKER_REGISTRY-}aarkam/aarkam.abodi:v1.0.4
     build:
       context: .
       dockerfile: Dockerfile.release
@@ -235,7 +236,7 @@ docker run -d \
   -e Storage__DataDirectory="/var/lib/aarkam/storage" \
   -e Storage__EnableDirectIO="true" \
   -e Kdouja__Mode="Embedded" \
-  aarkam/aarkam.abodi:v1.0.3
+  aarkam/aarkam.abodi:v1.0.4
 ```
 
 ---
@@ -315,11 +316,11 @@ The repository provides two Dockerfiles:
 2. **`src/Abodi/Dockerfile` (SDK Multi-Stage Build):** Compiles directly from source using `mcr.microsoft.com/dotnet/sdk:10.0` and restores `Aarkam.Kdouja.SDK` (`1.0.1`) from NuGet.org.
 
 ```powershell
-# 1. Regenerate v1.0.3 release bundles and stage dist/linux
-.\scripts\build-release.ps1 -Version "1.0.3" -ReleaseTag "v1.0.3"
+# 1. Regenerate v1.0.4 release bundles and stage dist/linux
+.\scripts\build-release.ps1 -Version "1.0.4" -ReleaseTag "v1.0.4"
 
 # 2. Build the production container image
-docker build -f Dockerfile.release -t aarkam/aarkam.abodi:v1.0.3 -t aarkam/aarkam.abodi:latest .
+docker build -f Dockerfile.release -t aarkam/aarkam.abodi:v1.0.4 -t aarkam/aarkam.abodi:latest .
 ```
 
 ---

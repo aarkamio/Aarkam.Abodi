@@ -1,0 +1,2 @@
+﻿c11bd1d974c8e6ae739373e576e5e2f91cc274527cee273cc469d7e31b735a1a  abodi-v1.0.4-linux-x64.zip
+efae17e40ed5ce29d3ffd5b2ac1cfd5cbc439cce98d7faf572d3666537f523fe  abodi-v1.0.4-win-x64.zip
